@@ -5,26 +5,84 @@
 #include <unistd.h>
 #include <string.h>
 
-char** parsecomm(char*);
-int execute(char**);
+FILE* CheckFile(const char*);
+int ExecBatch(FILE*);
+int ExecInter(char**);
+char** ParseComm(char*);
 
 int main(void)
 {
   /* pid_t ch; */
-  char prompt[512];
+  char line[512];
   char** args;
+  FILE* batchFile;
   
   do {
     printf("prompt> ");
-    fgets(prompt, 512, stdin);
-    args = parsecomm(prompt);
-    execute(args);
-  } while(strcmp(prompt,"quit"));
+    fgets(line, 512, stdin);
+    args = ParseComm(line);
+    printf("%s\n", line);
+    if(strcmp(line,"quit"))
+    {
+      printf("%s\n", args[0]);
+      batchFile = CheckFile(args[0]);
+      if(batchFile)
+	ExecBatch(batchFile);
+      else
+	ExecInter(args);
+    }
+  } while(strcmp(line,"quit"));
 
   return 0;	  
 }
 
-char** parsecomm(char* comm)
+/* Check to see if program name is batch file 
+   (if file exists) */
+FILE* CheckFile(const char* fName)
+{
+  FILE* batchFile = fopen(fName, "r");
+  return batchFile;
+}
+
+
+/* Execute commands in a batch file */
+int ExecBatch(FILE* bFile)
+{
+  char line[512];
+  char** args;
+
+  while (fgets(line, 512, bFile))
+  {
+    printf("%s", line);
+    args = ParseComm(line);
+    ExecInter(args);
+  }  
+  return 0;
+}
+  
+/* Execute a command in interactive */
+int ExecInter(char** args)
+{
+  pid_t pid;
+  int status;
+  
+  pid = fork();
+  if (pid == 0) /* child */
+  {
+    execvp(args[0], args);
+    fprintf(stderr, "Child failed to execute");
+    exit(1);
+  }
+  else /* parent */
+  {
+    wait(&status);
+  }
+
+  return 0;
+}
+
+/* Parse the commands that are given  */
+char** ParseComm(char* comm)
 {
   char** args = calloc(100, sizeof(char*));
   char* token;
@@ -43,28 +101,11 @@ char** parsecomm(char* comm)
     strcpy(args[i],token);
     ++i; 
   } while ((token = strtok(NULL, " ")) != NULL);
-  args[i] = '\0';
+  
+  /* if (!strcmp(args[i],"\n")) */
+  /*   printf(); */
   
   return args;
 }
 
-int execute(char** args)
-{
-  pid_t pid;
-  int status;
-  
-  pid = fork();
-  if (pid == 0) /* child */
-  {
-    execvp(args[0], args);
-    fprintf(stderr, "Child failed to execute");
-    exit(1);
-  }
-  else /* parent */
-  {
-    wait(&status);
-    printf("args[0] exited with status: %d\n", status );
-  }
 
-  return 0;
-}
