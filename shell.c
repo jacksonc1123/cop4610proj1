@@ -26,12 +26,15 @@ int main(void)
 char** parsecomm(char* comm)
 {
   char** argv = calloc(100, 512*sizeof(char));
-  int i;
+  char* token;
 
-  for(i = 0; i < (int)strlen(comm); ++i)
+  
+  /* for(i = 0; i < (int)strlen(comm); ++i) */
+  token = strtok(comm, " ");
+  do
   {
-    printf("%c\n", comm[i]);
-  }
+    printf("%s\n", token);
+  }  while ((token = strtok(NULL, " ")) != NULL);
 
   return argv;
 }
