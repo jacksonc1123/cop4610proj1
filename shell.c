@@ -12,29 +12,59 @@ int main(void)
 {
   /* pid_t ch; */
   char prompt[512];
-  /* char* argv[100]; */
+  char** args;
   
   do {
     printf("prompt> ");
     fgets(prompt, 512, stdin);
-    parsecomm(prompt);
-  } while(strcmp(prompt,"quit\n"));
+    args = parsecomm(prompt);
+    execute(args);
+  } while(strcmp(prompt,"quit"));
 
   return 0;	  
 }
 
 char** parsecomm(char* comm)
 {
-  char** argv = calloc(100, 512*sizeof(char));
+  char** args = calloc(100, sizeof(char*));
   char* token;
+  int i;
 
-  
-  /* for(i = 0; i < (int)strlen(comm); ++i) */
+  /* Strip newline character */
+  i = strlen(comm);
+  comm[i-1] = '\0';
+
+  /* Tokenize string into arguments */
   token = strtok(comm, " ");
+  i = 0;
   do
   {
-    printf("%s\n", token);
-  }  while ((token = strtok(NULL, " ")) != NULL);
+    args[i] = calloc(512, sizeof(char));
+    strcpy(args[i],token);
+    ++i; 
+  } while ((token = strtok(NULL, " ")) != NULL);
+  args[i] = '\0';
+  
+  return args;
+}
 
-  return argv;
+int execute(char** args)
+{
+  pid_t pid;
+  int status;
+  
+  pid = fork();
+  if (pid == 0) /* child */
+  {
+    execvp(args[0], args);
+    fprintf(stderr, "Child failed to execute");
+    exit(1);
+  }
+  else /* parent */
+  {
+    wait(&status);
+    printf("args[0] exited with status: %d\n", status );
+  }
+
+  return 0;
 }
