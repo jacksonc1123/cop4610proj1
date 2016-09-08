@@ -10,17 +10,31 @@ int ExecBatch(FILE*);
 int ExecInter(char**);
 char** ParseComm(char*);
 
-int main(void)
+int main(int argc, char* argv[])
 {
   /* pid_t ch; */
   char line[512];
+  
   char** args;
   FILE* batchFile;
   
+  /* handle command line arguments */
+  if (argc > 1)
+  {
+    batchFile = CheckFile(argv[1]);
+    if(batchFile)
+      ExecBatch(batchFile);
+    else
+      ExecInter(args);
+  }
+
+  /* main shell loop */
   do {
     printf("prompt> ");
     fgets(line, 512, stdin);
-    args = ParseComm(line);
+
+    args = ParseComm(line);    /* args gets the dynamically allocated array of 
+				  strings returned by ParseComm */
     printf("%s\n", line);
     if(strcmp(line,"quit"))
     {
@@ -33,6 +47,7 @@ int main(void)
     }
   } while(strcmp(line,"quit"));
 
+  free(args);
   return 0;	  
 }
 
@@ -43,7 +58,6 @@ FILE* CheckFile(const char* fName)
   FILE* batchFile = fopen(fName, "r");
   return batchFile;
 }
-
 
 /* Execute commands in a batch file */
 int ExecBatch(FILE* bFile)

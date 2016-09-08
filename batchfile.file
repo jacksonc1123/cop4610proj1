@@ -1,0 +1,6 @@
+ls -l
+echo hello
+mkdir bob
+ls -l
+rmdir bob
+ls -l
