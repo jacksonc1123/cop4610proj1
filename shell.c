@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     if(batchFile)
       ExecBatch(batchFile);
     else
-      ExecInter(args);
+      printf("Not Allowed\n");
   }
 
   /* main shell loop */
