@@ -5,16 +5,19 @@
 #include <unistd.h>
 #include <string.h>
 
+int ArraySize(char**);
 FILE* CheckFile(const char*);
+int Count(char*, char**);
 int ExecBatch(FILE*);
 int ExecInter(char**);
 char** ParseComm(char*);
+char*** ParseLine(char**);
 
 int main(int argc, char* argv[])
 {
   /* pid_t ch; */
   char line[512];
-  
+  char*** argLists;
   char** args;
   FILE* batchFile;
   
@@ -35,19 +38,20 @@ int main(int argc, char* argv[])
 
     args = ParseComm(line);    /* args gets the dynamically allocated array of 
 				  strings returned by ParseComm */
-    printf("%s\n", line);
+    argLists = ParseLine(args);
     if(strcmp(line,"quit"))
     {
-      printf("%s\n", args[0]);
+      /* printf("%s\n", args[0]); */
       batchFile = CheckFile(args[0]);
       if(batchFile)
-	ExecBatch(batchFile);
+    	ExecBatch(batchFile);
       else
-	ExecInter(args);
+    	ExecInter(args);
     }
   } while(strcmp(line,"quit"));
 
   free(args);
+  free(argLists);
   return 0;	  
 }
 
@@ -111,15 +115,79 @@ char** ParseComm(char* comm)
   i = 0;
   do
   {
-    args[i] = calloc(512, sizeof(char));
+    /* allocate enough space for the size of the token */
+    args[i] = calloc(strlen(token+1), sizeof(char));
     strcpy(args[i],token);
+
     ++i; 
   } while ((token = strtok(NULL, " ")) != NULL);
   
+
   /* if (!strcmp(args[i],"\n")) */
   /*   printf(); */
   
   return args;
 }
 
+/* split the list of arguments into another list with semicolons as the
+   delimiter*/
+char*** ParseLine(char** args)
+{
+  char*** commands;
+  int size, count;
+  int i, j, k;
 
+  size = ArraySize(args);
+  count = Count(";", args);
+  commands = calloc(size, sizeof(char**));
+
+  i = 0;
+  j = 0;
+  k = 0;
+
+  printf("Number of commands: %d\n", count);
+  /* allocate space for each command */
+
+
+  while(args[i] != NULL)
+  {
+    strcpy(commands[j][k],args[i]);
+    printf("%s\n",commands[j][k]);
+    ++i;
+    ++k;
+    if (!strcmp(args[i],";"))
+    {
+      ++j;
+      k = 0;
+    }
+  }
+
+  return commands;
+}
+
+int ArraySize(char** args)
+{
+  int i = 0;
+  
+  while(args[i] != NULL)
+    ++i;
+
+  return i;
+}
+
+/* simple helper to count number of specified delimiter in list*/
+int Count(char* delim, char** args)
+{
+  int i = 0;
+  int count = 0;
+
+  while(args[i] != NULL)
+  {
+    printf("%s\n",args[i]);
+    if(!strcmp(args[i],delim))
+      ++count;
+    ++i;
+  }
+  
+  return count+1;
+}
