@@ -8,13 +8,12 @@
 FILE* CheckFile(const char*);
 int ExecBatch(FILE*);
 int ExecInter(char**);
-char** ParseComm(char*);
+char** ParseComm(char*,char*);
 
 int main(int argc, char* argv[])
 {
   /* pid_t ch; */
   char line[512];
-  
   char** args;
   FILE* batchFile;
   
@@ -33,21 +32,20 @@ int main(int argc, char* argv[])
     printf("prompt> ");
     fgets(line, 512, stdin);
 
-    args = ParseComm(line);    /* args gets the dynamically allocated array of 
+    args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
 				  strings returned by ParseComm */
-    printf("%s\n", line);
     if(strcmp(line,"quit"))
     {
-      printf("%s\n", args[0]);
       batchFile = CheckFile(args[0]);
       if(batchFile)
-	ExecBatch(batchFile);
+      	ExecBatch(batchFile);
       else
-	ExecInter(args);
+      	ExecInter(args);
     }
+    free(args);
   } while(strcmp(line,"quit"));
 
-  free(args);
+
   return 0;	  
 }
 
@@ -65,10 +63,11 @@ int ExecBatch(FILE* bFile)
   char line[512];
   char** args;
 
-  while (fgets(line, 512, bFile))
+  while(fgets(line, 512, bFile))
   {
     printf("%s", line);
-    args = ParseComm(line);
+    args = ParseComm(line,";");
+
     ExecInter(args);
   }  
   return 0;
@@ -78,43 +77,56 @@ int ExecBatch(FILE* bFile)
 int ExecInter(char** args)
 {
   pid_t pid;
-  int status;
+  int status, i;
+  char** tList;
   
-  pid = fork();
-  if (pid == 0) /* child */
+  i = 0;
+  while(args[i] != NULL)
   {
-    execvp(args[0], args);
-    fprintf(stderr, "Child failed to execute");
-    exit(1);
-  }
-  else /* parent */
-  {
-    wait(&status);
+    printf("Command: %s\n",args[i]);
+    tList = ParseComm(args[i]," ");
+    pid = fork();
+    if (pid == 0) /* child */
+    {
+      execvp(tList[0], tList);
+      fprintf(stderr, "Child failed to execute");
+      exit(1);
+    }
+    else /* parent */
+    {
+      wait(&status);
+    }
+
+    ++i;
   }
 
   return 0;
 }
 
 /* Parse the commands that are given  */
-char** ParseComm(char* comm)
+char** ParseComm(char* comm, char* delim)
 {
-  char** args = calloc(100, sizeof(char*));
+  char** args = (char**)calloc(100, sizeof(char*));
   char* token;
-  int i;
+  int i, j, k;
 
   /* Strip newline character */
-  i = strlen(comm);
-  comm[i-1] = '\0';
+  i = 0;
+  while(comm[i] != '\0')
+  {
+    if(comm[i] == '\n')
+      comm[i] = '\0';
+    ++i;
+  }
 
   /* Tokenize string into arguments */
-  token = strtok(comm, " ");
+  token = strtok(comm, delim);
   i = 0;
-  do
-  {
-    args[i] = calloc(512, sizeof(char));
+  do {
+    args[i] = (char*)calloc(512, sizeof(char));
     strcpy(args[i],token);
-    ++i; 
-  } while ((token = strtok(NULL, " ")) != NULL);
+    ++i;
+  } while((token = strtok(NULL, delim)) != NULL);
   
   /* if (!strcmp(args[i],"\n")) */
   /*   printf(); */
