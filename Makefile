@@ -11,7 +11,7 @@ TARGETS=tinysh
 OBJ=shell.o
 
 tinysh: $(OBJ)
-	$(CC) -o tinysh $(OBJ) $(ALL_CFLAGS)
+	$(CC) -o tinysh $(OBJ) $(CFLAGS) $(ALL_CFLAGS)
 
 shell.o: shell.c
 

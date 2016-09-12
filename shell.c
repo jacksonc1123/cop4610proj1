@@ -10,7 +10,7 @@ FILE* CheckFile(const char*);
 int ExecBatch(FILE*);
 int ExecInter(char**);
 char** ParseComm(char*,char*);
-int Space(const char*);
+int Empty(const char*);
 
 int main(int argc, char* argv[])
 {
@@ -125,13 +125,16 @@ char** ParseComm(char* comm, char* delim)
   token = strtok(comm, delim);
   i = 0;
   do {
-    printf("Token: %s\n",token);
-    /* if(!Space(token)) */
-    /* { */
-      args[i] = (char*)calloc(strlen(token), sizeof(char));
-      strcpy(args[i],token);
-      ++i;
-    /* } */
+    if (Empty(token))
+    {
+      token = strtok(NULL, delim);
+      printf("Token: %s\n",token);
+    }
+
+    args[i] = (char*)calloc(strlen(token)+1, sizeof(char));
+    strcpy(args[i],token);
+    ++i;
+
   } while((token = strtok(NULL, delim)) != NULL);
   
   /* if (!strcmp(args[i],"\n")) */
@@ -140,12 +143,12 @@ char** ParseComm(char* comm, char* delim)
   return args;
 }
 
-int Space(const char* str)
+int Empty(const char* str)
 {
   int i = 0;
   while(str[i] != '\0')
   {
-    if(!isspace(*str))
+    if(str[i] != ' ')
       return 0;
     ++i;
   }
