@@ -3,12 +3,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <string.h>
 
 FILE* CheckFile(const char*);
 int ExecBatch(FILE*);
 int ExecInter(char**);
 char** ParseComm(char*,char*);
+int Space(const char*);
 
 int main(int argc, char* argv[])
 {
@@ -123,9 +125,13 @@ char** ParseComm(char* comm, char* delim)
   token = strtok(comm, delim);
   i = 0;
   do {
-    args[i] = (char*)calloc(512, sizeof(char));
-    strcpy(args[i],token);
-    ++i;
+    printf("Token: %s\n",token);
+    /* if(!Space(token)) */
+    /* { */
+      args[i] = (char*)calloc(strlen(token), sizeof(char));
+      strcpy(args[i],token);
+      ++i;
+    /* } */
   } while((token = strtok(NULL, delim)) != NULL);
   
   /* if (!strcmp(args[i],"\n")) */
@@ -134,4 +140,16 @@ char** ParseComm(char* comm, char* delim)
   return args;
 }
 
+int Space(const char* str)
+{
+  int i = 0;
+  while(str[i] != '\0')
+  {
+    if(!isspace(*str))
+      return 0;
+    ++i;
+  }
+
+  return 1;
+}
 
