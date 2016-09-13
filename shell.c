@@ -40,6 +40,10 @@ int main(int argc, char* argv[])
     {
       fprintf(stderr, "There was an error processing your request.\n");
     }
+    else if(Empty(line))
+    {
+      printf("line is empty\n");
+    }
 
     args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
 				  strings returned by ParseComm */
@@ -114,7 +118,6 @@ int ExecInter(char** args)
     {
       wait(&status);
     }
-
     ++i;
   }
 
@@ -163,7 +166,7 @@ int Empty(const char* str)
   int i = 0;
   while(str[i] != '\0')
   {
-    if(str[i] != ' ')
+    if(!isspace((int)str[i]))
       return 0;
     ++i;
   }
