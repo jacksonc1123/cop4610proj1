@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <string.h>
 
+void BigFree(char**);
 FILE* CheckFile(const char*);
 int ExecBatch(FILE*);
 int ExecInter(char**);
@@ -18,6 +19,7 @@ int main(int argc, char* argv[])
   char line[512];
   char** args;
   FILE* batchFile;
+  int execStatus;
   
   /* handle command line arguments */
   if (argc > 1)
@@ -33,6 +35,11 @@ int main(int argc, char* argv[])
   do {
     printf("prompt> ");
     fgets(line, 512, stdin);
+    /* handle error with input */
+    if(!line)
+    {
+      fprintf(stderr, "There was an error processing your request.\n");
+    }
 
     args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
 				  strings returned by ParseComm */
@@ -40,13 +47,16 @@ int main(int argc, char* argv[])
     {
       batchFile = CheckFile(args[0]);
       if(batchFile)
-      	ExecBatch(batchFile);
+      	execStatus = ExecBatch(batchFile);
       else
       	ExecInter(args);
     }
-    free(args);
+    /* handle quit command in batch file processing */
+    if(execStatus == 1)
+      break;
+    /* free up dynamically allocated memory */
+    BigFree(args);
   } while(strcmp(line,"quit"));
-
 
   return 0;	  
 }
@@ -67,7 +77,13 @@ int ExecBatch(FILE* bFile)
 
   while(fgets(line, 512, bFile))
   {
-    printf("%s", line);
+    /* handle error with input */
+    if(!line)
+    {
+      fprintf(stderr, "There was an error processing your request.\n");
+    }    
+    else if(!strcmp(line,"quit"))
+      return 1;
     args = ParseComm(line,";");
 
     ExecInter(args);
@@ -91,7 +107,7 @@ int ExecInter(char** args)
     if (pid == 0) /* child */
     {
       execvp(tList[0], tList);
-      fprintf(stderr, "Child failed to execute");
+      fprintf(stderr, "%s failed to execute.\n",args[i]);
       exit(1);
     }
     else /* parent */
@@ -128,7 +144,6 @@ char** ParseComm(char* comm, char* delim)
     if (Empty(token))
     {
       token = strtok(NULL, delim);
-      printf("Token: %s\n",token);
     }
 
     args[i] = (char*)calloc(strlen(token)+1, sizeof(char));
@@ -156,3 +171,14 @@ int Empty(const char* str)
   return 1;
 }
 
+void BigFree(char** args)
+{
+  int i = 0;
+
+  while (args[i] != NULL)
+  {
+    free(args[i]);
+    ++i;
+  }
+  free(args);
+}
