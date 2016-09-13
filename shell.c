@@ -40,26 +40,24 @@ int main(int argc, char* argv[])
     {
       fprintf(stderr, "There was an error processing your request.\n");
     }
-    else if(Empty(line))
+    else if(!Empty(line))
     {
-      printf("line is empty\n");
+      args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
+					strings returned by ParseComm */
+      if(strcmp(line,"quit"))
+      {
+	batchFile = CheckFile(args[0]);
+	if(batchFile)
+	  execStatus = ExecBatch(batchFile);
+	else
+	  ExecInter(args);
+      }
+      /* handle quit command in batch file processing */
+      if(execStatus == 1)
+	break;
+      /* free up dynamically allocated memory */
+      BigFree(args);
     }
-
-    args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
-				  strings returned by ParseComm */
-    if(strcmp(line,"quit"))
-    {
-      batchFile = CheckFile(args[0]);
-      if(batchFile)
-      	execStatus = ExecBatch(batchFile);
-      else
-      	ExecInter(args);
-    }
-    /* handle quit command in batch file processing */
-    if(execStatus == 1)
-      break;
-    /* free up dynamically allocated memory */
-    BigFree(args);
   } while(strcmp(line,"quit"));
 
   return 0;	  
