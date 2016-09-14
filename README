@@ -1,3 +1,23 @@
-Name:  Cameron Jackson
-FSUID: cj12d
+# Name:  Cameron Jackson
+# FSUID: cj12d
+
+# Overview:
+
+My shell operates by taking the command line and tokenizes it based off of the
+semicolons to get a list of commands. That list is then passed to a function that
+takes each command and tokenizes it by whitespace to pass the command to the
+execution function. It does this for each command one at a time until it reaches
+the end of the command list. For batch files, the file is read line by line and
+each line is passed to the same parsing and execution functions that are used for
+the interactive command line operation. This process is executed in a while loop
+that runs until the quit command is received.
+
+# Specification:
+
+For lines that have no commands between semicolons, the extra whitespace is ignored.
+I have a function that explicitely checks for whitespace, and if the token is only
+whitespace, then it is discarded and a new token is found.
+The shell treats multiple semicolons in a row as if they were one semicolon. It also
+ignores semicolons that are in front of commands (ie. ";; ls -l" is treated as if it
+were "ls -l").
 

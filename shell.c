@@ -15,35 +15,45 @@ int Empty(const char*);
 
 int main(int argc, char* argv[])
 {
-  /* pid_t ch; */
   char line[512];
   char** args;
   FILE* batchFile;
   int execStatus;
   
   /* handle command line arguments */
-  if (argc > 1)
+  if(argc > 1)
   {
     batchFile = CheckFile(argv[1]);
-    if(batchFile)
-      ExecBatch(batchFile);
+    if(!batchFile)
+    {
+      fprintf(stderr, "%s: File not found\n", argv[1]);
+      exit(1);
+    }
     else
-      printf("Not Allowed\n");
+      execStatus = ExecBatch(batchFile);
+  }
+  else if(argc > 2)
+  {
+    fprintf(stderr, "Too many arguments\n");
+    exit(1);
   }
 
+  if(execStatus == 1)
+    return 0;
   /* main shell loop */
   do {
     printf("prompt> ");
     fgets(line, 512, stdin);
     /* handle error with input */
-    if(!line)
+    if(line == NULL)
     {
       fprintf(stderr, "There was an error processing your request.\n");
     }
     else if(!Empty(line))
     {
-      args = ParseComm(line,";");    /* args gets the dynamically allocated array of 
-					strings returned by ParseComm */
+      /* args gets the dynamically allocated array of strings returned by 
+	 ParseComm */
+      args = ParseComm(line,";"); 
       if(strcmp(line,"quit"))
       {
 	batchFile = CheckFile(args[0]);
@@ -63,7 +73,7 @@ int main(int argc, char* argv[])
   return 0;	  
 }
 
-/* Check to see if program name is batch file 
+/* Check to see if program name is batch file and open
    (if file exists) */
 FILE* CheckFile(const char* fName)
 {
@@ -96,26 +106,29 @@ int ExecBatch(FILE* bFile)
 /* Execute a command in interactive */
 int ExecInter(char** args)
 {
-  pid_t pid;
+  pid_t pid, c_pid;
   int status, i;
   char** tList;
   
   i = 0;
   while(args[i] != NULL)
   {
-    printf("Command: %s\n",args[i]);
-    tList = ParseComm(args[i]," ");
+    /* printf("Command: %s\n",args[i]); */
     pid = fork();
+    tList = ParseComm(args[i]," ");
     if (pid == 0) /* child */
     {
       execvp(tList[0], tList);
-      fprintf(stderr, "%s failed to execute.\n",args[i]);
+      fprintf(stderr, "%s: Command not found\n", args[i]);
       exit(1);
-    }
-    else /* parent */
-    {
-      wait(&status);
-    }
+    } 
+    ++i;
+  }
+
+  i = 0;
+  while(args[i] != NULL)
+  {
+    c_pid = wait(&status);
     ++i;
   }
 
