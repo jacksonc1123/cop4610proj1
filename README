@@ -10,7 +10,8 @@ execution function. It does this for each command one at a time until it reaches
 the end of the command list. For batch files, the file is read line by line and
 each line is passed to the same parsing and execution functions that are used for
 the interactive command line operation. This process is executed in a while loop
-that runs until the quit command is received.
+that runs until the quit command is received. 
+
 
 # Specification:
 
@@ -22,4 +23,4 @@ ignores semicolons that are in front of commands (ie. ";; ls -l" is treated as i
 were "ls -l"). 
 For the execution of processes, there is one loop that forks and executes the commands,
 and another loop that ensures that the parent process waits for each of the children.
-If 
+

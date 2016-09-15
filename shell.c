@@ -100,15 +100,18 @@ int ExecBatch(FILE* bFile) {
   return 0;
 }
   
-/* Execute a command or list of commands */
+/* Execute a command or list of commands.
+   If quit is one of the arguments, the function skips the fork/exec loop,
+   and sets a return variable to 1 so the main loop can properly exit. */
 int ExecInter(char** args) {
   pid_t pid, c_pid;
   int status, i, r_code;
   char** tList;
 
   i = r_code = 0;
+  /* fork and exec for every argument */
   while(args[i] != NULL) {
-    if (!strstr(args[i],"quit")) {
+    if (!strstr(args[i],"quit")) { /* only fork if the not the quit command */
       pid = fork();
       tList = ParseComm(args[i]," ");
       if(pid == 0) { /* child */
@@ -125,6 +128,7 @@ int ExecInter(char** args) {
   }
 
   i = 0;
+  /* wait for every argument */
   while(args[i] != NULL) {
     c_pid = wait(&status);
     ++i;
@@ -178,6 +182,7 @@ int Empty(const char* str) {
   return 1;
 }
 
+/* free the dynamically allocated structures */
 void BigFree(char** args) {
   int i = 0;
   while (args[i] != NULL) {
