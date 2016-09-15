@@ -61,6 +61,8 @@ int main(int argc, char* argv[]){
 	  else
 	    execStatus = ExecInter(args);
 	}
+	else 
+	  break;
 	/* handle quit command in batch file processing */
 	if(execStatus == 1)
 	  break;
