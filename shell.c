@@ -43,7 +43,8 @@ int main(int argc, char* argv[]){
     line = (char*)calloc(BUFF,sizeof(char));
     printf("prompt> ");
     fgets(line, BUFF, stdin);
-    
+    if(feof(stdin))
+      return 0;
     /* handle error with input */
     if(line == NULL)
       fprintf(stderr, "There was an error processing your request\n");
@@ -61,9 +62,9 @@ int main(int argc, char* argv[]){
 	  else
 	    execStatus = ExecInter(args);
 	}
-	else 
+	else if(!strcmp(args[0],"quit"))
 	  break;
-	/* handle quit command in batch file processing */
+	/* handle quit signals not caught by parsing */
 	if(execStatus == 1)
 	  break;
        

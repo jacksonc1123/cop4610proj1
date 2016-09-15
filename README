@@ -28,4 +28,4 @@ and another loop that ensures that the parent process waits for each of the chil
 # Known Bugs:
 
 Shell builtin functions are not supported e.g. "cd", "bg", "fg".
-Ctrl-C exits the entire shell and not just the currently running program. 
+
