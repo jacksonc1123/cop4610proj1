@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
     exit(1);
   }
 
-
+  args = (char**)calloc(100, sizeof(char*));
   /* main shell loop */
   do {
     printf("prompt> ");
@@ -53,16 +53,11 @@ int main(int argc, char* argv[]){
     else if(!Empty(line)) {
       /* args gets the dynamically allocated array of strings returned by 
 	 ParseComm */
-      args = (char**)calloc(100, sizeof(char*));
+      /* args = (char**)calloc(100, sizeof(char*)); */
       ParseComm(args,line,";"); 
-      if(args) { /* only run the following if args isn't empty */
-	if(strcmp(args[0],"quit")) {
-	  batchFile = CheckFile(args[0]);
-	  if(batchFile)
-	    execStatus = ExecBatch(batchFile);
-	  else
+      if(args[0] != NULL) { /* only run the following if args isn't empty */
+	if(strcmp(args[0],"quit"))
 	    execStatus = ExecInter(args);
-	}
 	else if(!strcmp(args[0],"quit"))
 	  break;
 	/* handle quit signals not caught by parsing */
@@ -72,11 +67,15 @@ int main(int argc, char* argv[]){
 	/* free up dynamically allocated memory */
 	if(args != NULL) {
 	  BigFree(args);
-	  args = NULL;
 	}
       }
     }
   } while(strcmp(line,"quit"));
+
+  if(args != NULL) {
+    BigFree(args);
+    free(args);
+  }
 
   return 0;	  
 }
@@ -142,6 +141,7 @@ int ExecInter(char** args) {
     ++i;
   }
 
+  BigFree(tList);
   return r_code;
 }
 
@@ -161,8 +161,10 @@ void ParseComm(char** args, char* comm, char* delim) {
   /* Tokenize string into arguments */
   token = strtok(comm, delim);
   /* if token is empty here, then it was an empty command */
-  if(!token)
-    args = NULL;
+  if(!token) {
+    BigFree(args);
+    return;
+  }
 
   i = 0;
   do {
@@ -173,7 +175,6 @@ void ParseComm(char** args, char* comm, char* delim) {
     strcpy(args[i],token);
     ++i;
   } while((token = strtok(NULL, delim)) != NULL);
-  
 }
 
 /* Check if string is only whitespace */
@@ -196,5 +197,4 @@ void BigFree(char** args) {
     args[i] = NULL;
     ++i;
   }
-  free(args);
 }
