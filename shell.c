@@ -10,17 +10,19 @@ void BigFree(char**);
 FILE* CheckFile(const char*);
 int ExecBatch(FILE*);
 int ExecInter(char**);
-char** ParseComm(char*,char*);
+void ParseComm(char**,char*,char*);
 int Empty(const char*);
 
 const int BUFF = 515;
 
 int main(int argc, char* argv[]){
   char* line;
-  char** args;
   FILE* batchFile;
-  int execStatus;
-  
+  char** args = NULL; 
+  int execStatus = 0;
+  int i;
+
+  line = calloc(BUFF,sizeof(char));
   /* handle command line arguments */
   if(argc > 1) {
     batchFile = CheckFile(argv[1]);
@@ -28,19 +30,17 @@ int main(int argc, char* argv[]){
       fprintf(stderr, "%s: File not found\n", argv[1]);
       exit(1);
     }
-    else
-      execStatus = ExecBatch(batchFile);
+    ExecBatch(batchFile);
+    return 0;
   }
   else if(argc > 2) {
     fprintf(stderr, "Too many arguments\n");
     exit(1);
   }
 
-  if(execStatus == 1)
-    return 0;
+
   /* main shell loop */
   do {
-    line = (char*)calloc(BUFF,sizeof(char));
     printf("prompt> ");
     fgets(line, BUFF, stdin);
     if(feof(stdin))
@@ -53,7 +53,8 @@ int main(int argc, char* argv[]){
     else if(!Empty(line)) {
       /* args gets the dynamically allocated array of strings returned by 
 	 ParseComm */
-      args = ParseComm(line,";"); 
+      args = (char**)calloc(100, sizeof(char*));
+      ParseComm(args,line,";"); 
       if(args) { /* only run the following if args isn't empty */
 	if(strcmp(args[0],"quit")) {
 	  batchFile = CheckFile(args[0]);
@@ -69,8 +70,10 @@ int main(int argc, char* argv[]){
 	  break;
        
 	/* free up dynamically allocated memory */
-	BigFree(args);
-	free(line);
+	if(args != NULL) {
+	  BigFree(args);
+	  args = NULL;
+	}
       }
     }
   } while(strcmp(line,"quit"));
@@ -96,7 +99,7 @@ int ExecBatch(FILE* bFile) {
       fprintf(stderr, "There was an error processing your request\n");
     else if(!strcmp(line,"quit"))
       return 1;
-    args = ParseComm(line,";");
+    ParseComm(args, line,";");
 
     ExecInter(args);
   }  
@@ -109,14 +112,16 @@ int ExecBatch(FILE* bFile) {
 int ExecInter(char** args) {
   pid_t pid, c_pid;
   int status, i, r_code;
-  char** tList;
+  char** tList = NULL;
 
+  tList = (char**)calloc(100, sizeof(char*));
   i = r_code = 0;
   /* fork and exec for every argument */
   while(args[i] != NULL) {
+    printf("%s\n",args[i]);
     if (!strstr(args[i],"quit")) { /* only fork if the not the quit command */
       pid = fork();
-      tList = ParseComm(args[i]," ");
+      ParseComm(tList, args[i]," ");
       if(pid == 0) { /* child */
 	execvp(tList[0], tList);
 	fprintf(stderr, "%s: Command not found\n", args[i]);
@@ -141,8 +146,7 @@ int ExecInter(char** args) {
 }
 
 /* Parse the command lines that are given  */
-char** ParseComm(char* comm, char* delim) {
-  char** args = (char**)calloc(100, sizeof(char*));
+void ParseComm(char** args, char* comm, char* delim) {
   char* token;
   int i, j, k;
 
@@ -153,12 +157,12 @@ char** ParseComm(char* comm, char* delim) {
       comm[i] = '\0';
     ++i;
   }
-
+ 
   /* Tokenize string into arguments */
   token = strtok(comm, delim);
   /* if token is empty here, then it was an empty command */
   if(!token)
-    return NULL;
+    args = NULL;
 
   i = 0;
   do {
@@ -170,7 +174,6 @@ char** ParseComm(char* comm, char* delim) {
     ++i;
   } while((token = strtok(NULL, delim)) != NULL);
   
-  return args;
 }
 
 /* Check if string is only whitespace */
@@ -190,6 +193,7 @@ void BigFree(char** args) {
   int i = 0;
   while (args[i] != NULL) {
     free(args[i]);
+    args[i] = NULL;
     ++i;
   }
   free(args);
