@@ -53,13 +53,9 @@ int main(int argc, char* argv[]){
     else if(!Empty(line)) {
       /* args gets the dynamically allocated array of strings returned by 
 	 ParseComm */
-      /* args = (char**)calloc(100, sizeof(char*)); */
       ParseComm(args,line,";"); 
       if(args[0] != NULL) { /* only run the following if args isn't empty */
-	if(strcmp(args[0],"quit"))
-	    execStatus = ExecInter(args);
-	else if(!strcmp(args[0],"quit"))
-	  break;
+	execStatus = ExecInter(args);
 	/* handle quit signals not caught by parsing */
 	if(execStatus == 1)
 	  break;
@@ -118,7 +114,9 @@ int ExecInter(char** args) {
   /* fork and exec for every argument */
   while(args[i] != NULL) {
     printf("%s\n",args[i]);
-    if (!strstr(args[i],"quit")) { /* only fork if the not the quit command */
+    if (!strstr(args[i],"quit") ||
+	(strstr(args[i],"quit") && (strlen(args[i]) > 5))) { 
+      /* only fork if the not the quit command */
       pid = fork();
       ParseComm(tList, args[i]," ");
       if(pid == 0) { /* child */
@@ -128,7 +126,7 @@ int ExecInter(char** args) {
       }
       ++i;
     }
-    else {
+    else if(strstr(args[i],"quit") && (strlen(args[i]) < 6)) {
       r_code = 1;
       ++i;
     }
