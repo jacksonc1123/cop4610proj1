@@ -28,4 +28,5 @@ and another loop that ensures that the parent process waits for each of the chil
 # Known Bugs:
 
 Shell builtin functions are not supported e.g. "cd", "bg", "fg".
-
+Ctrl-D waits for command line to finish and then exits, but it reprints the typed
+command line next to the line typed by the user.

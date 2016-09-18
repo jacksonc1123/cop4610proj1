@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
   FILE* batchFile;
   char** args = NULL; 
   int execStatus = 0;
-  int i;
+  int i, eCode = 0;
 
   line = calloc(BUFF,sizeof(char));
   /* handle command line arguments */
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
     printf("prompt> ");
     fgets(line, BUFF, stdin);
     if(feof(stdin))
-      return 0;
+      eCode = 1;
     /* handle error with input */
     if(line == NULL)
       fprintf(stderr, "There was an error processing your request\n");
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
 	}
       }
     }
-  } while(strcmp(line,"quit"));
+  } while(strcmp(line,"quit") && (eCode != 1));
 
   if(args != NULL) {
     BigFree(args);
